@@ -5,7 +5,7 @@ export function getOptionChain(api_key,symbol,exp) {
 }
 
 export function getEODStockPrice(api_key,symbol, date) {
-    return axios.get(`https://api-v2.intrinio.com/securities/${symbol}/historical_data/adj_close_price?frequency=daily&start_date=${date}&api_key=${api_key}`);
+    return axios.get(`https://api-v2.intrinio.com/securities/${symbol}/historical_data/adj_close_price?frequency=daily&start_date=${date}&end_date=${date}&api_key=${api_key}`);
 }
 
 export function getCurrentPrice(api_key, symbol) {

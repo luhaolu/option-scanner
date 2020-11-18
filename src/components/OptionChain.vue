@@ -24,10 +24,13 @@
           <div>Recived {{numOfResults}} Results</div> -->
           <div>{{uniqueSymbols.length}} Unique Symbols: {{uniqueSymbolsStr}}</div>
           <div v-if="durationInMin > 0">Scan took {{durationInMin}} mins </div>
+          <b-input-group size="md" prepend="API Key">
+            <b-form-input v-model="apiKey"></b-form-input>
+          </b-input-group>
           <div class="input-group-container">
-            <b-input-group class="atr-input-group" size="md" prepend="Previous Trade Date">
+            <!-- <b-input-group class="atr-input-group" size="md" prepend="Previous Trade Date">
               <b-form-input v-model="previousTradingDay"></b-form-input>
-            </b-input-group>
+            </b-input-group> -->
             <b-input-group class="atr-input-group" size="md" prepend="ATR multiple">
               <b-form-input v-model="atrMultiple"></b-form-input>
             </b-input-group>
@@ -85,7 +88,7 @@ export default {
       numOfSearchDone: 0,
       scanAll: false,
       atrMultiple: 1.5,
-      previousTradingDay: "2020-11-17",
+      // previousTradingDay: "2020-11-17",
       scanStartTime: null,
       scanEndTime: null,
       sortBy: "annualized_%",
@@ -142,6 +145,16 @@ export default {
     test() {
       return this.EarningsData.earnings.find(item => item.code==="AAPL.US");
     },
+    previousTradingDay() {
+      const date = new Date();
+      for (var i = 1; i < 7; i ++) {
+        let dayOfWeek = new Date(date.setDate(date.getDate() - i)).getDay();
+        if (dayOfWeek % 7 !== 0) {
+          break;
+        }
+      }
+      return this.formatDate(date);
+    },
     today() {
       return new Date();
     },
@@ -150,7 +163,7 @@ export default {
       // return "2020-11-20";
     },
     thisFridayStr() {
-      return this.thisFriday.toISOString().substring(0, 10);
+      return this.formatDate(this.thisFriday);
     },
     nextFriday() {
       const date = this.thisFriday;
@@ -158,7 +171,7 @@ export default {
       return this.getNextDayOfWeek(date , 5);
     },
     nextFridayStr() {
-      return this.nextFriday.toISOString().substring(0, 10);
+      return this.formatDate(this.nextFriday);
     },
     symbolsArray() {
       return this.symbols.split(',');
@@ -190,6 +203,19 @@ export default {
     },
   },
   methods: {
+    formatDate(date) {
+      var d = new Date(date),
+          month = '' + (d.getMonth() + 1),
+          day = '' + d.getDate(),
+          year = d.getFullYear();
+
+      if (month.length < 2) 
+          month = '0' + month;
+      if (day.length < 2) 
+          day = '0' + day;
+
+      return [year, month, day].join('-');
+    },
     /**
      * params
      * date [JS Date()]
