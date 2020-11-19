@@ -70,7 +70,7 @@ import EarningsData from '../services/earnings.json'; // earnings up to Feb 17 2
 // import VueTradingView from 'vue-trading-view';
 
 export default {
-  name: 'OptionChain',
+  name: 'OptionScanner',
   props: {
     msg: String
   },
@@ -88,7 +88,6 @@ export default {
       numOfSearchDone: 0,
       scanAll: false,
       atrMultiple: 1.5,
-      // previousTradingDay: "2020-11-17",
       scanStartTime: null,
       scanEndTime: null,
       sortBy: "annualized_%",
@@ -142,14 +141,11 @@ export default {
   created  () {
   },
   computed: {
-    test() {
-      return this.EarningsData.earnings.find(item => item.code==="AAPL.US");
-    },
     previousTradingDay() {
       const date = new Date();
-      for (var i = 1; i < 7; i ++) {
+      for (var i = 1; i < 6; i ++) {
         let dayOfWeek = new Date(date.setDate(date.getDate() - i)).getDay();
-        if (dayOfWeek % 7 !== 0) {
+        if (dayOfWeek % 6 !== 0) {
           break;
         }
       }
@@ -160,7 +156,6 @@ export default {
     },
     thisFriday() {
       return this.getNextDayOfWeek(new Date(), 5);
-      // return "2020-11-20";
     },
     thisFridayStr() {
       return this.formatDate(this.thisFriday);
@@ -247,7 +242,8 @@ export default {
         this.annualized(item) >= 30 &&
         this.annualized(item) <= 100 &&
         item.price.bid > 0.25 &&
-        (this.today.getTime() - Date.parse(item.price.last_timestamp)) / (1000 * 3600 * 24) <= 1);
+        item.price.bid < item.price.ask && //filter out bad data, as bid should always be lower than ask
+        (this.today.getTime() - Date.parse(item.price.last_timestamp)) / (1000 * 3600 * 24) <= 1); //make sure option is traded in last 24 hr
 
       // console.log(data);
       chain.forEach((item) => {
