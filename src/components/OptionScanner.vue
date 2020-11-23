@@ -24,9 +24,23 @@
           <div>Recived {{numOfResults}} Results</div> -->
           <div>{{uniqueSymbols.length}} Unique Symbols: {{uniqueSymbolsStr}}</div>
           <div v-if="durationInMin > 0">Scan took {{durationInMin}} mins </div>
-          <b-input-group size="md" prepend="API Key">
-            <b-form-input v-model="apiKey"></b-form-input>
-          </b-input-group>
+          <div class="input-group-container">
+            <b-input-group size="md" prepend="API Key" style="min-width:50%">
+              <b-form-input v-model="apiKey"></b-form-input>
+            </b-input-group>
+            <b-input-group size="md" prepend="This Friday">
+              <b-form-input v-model="thisFridayInput"></b-form-input>
+              <b-input-group-append>
+                <b-form-datepicker button-only right locale="en-US" id="example-datepicker" v-model="thisFridayInput"></b-form-datepicker>
+              </b-input-group-append>
+            </b-input-group>
+            <b-input-group size="md" prepend="Next Friday">
+              <b-form-input v-model="nextFridayInput"></b-form-input>
+              <b-input-group-append>
+                <b-form-datepicker button-only right locale="en-US" id="example-datepicker" v-model="nextFridayInput"></b-form-datepicker>
+              </b-input-group-append>
+            </b-input-group>
+          </div>
           <div class="input-group-container">
             <!-- <b-input-group class="atr-input-group" size="md" prepend="Previous Trade Date">
               <b-form-input v-model="previousTradingDay"></b-form-input>
@@ -136,9 +150,13 @@ export default {
           sortDirection: 'desc'
         },
       ],
+      thisFridayInput: null,
+      nextFridayInput: null,
     }
   },
   created  () {
+    this.thisFridayInput = this.thisFridayStr;
+    this.nextFridayInput = this.nextFridayStr;
   },
   computed: {
     previousTradingDay() {
@@ -308,14 +326,14 @@ export default {
             let chain;
             // Make sure no earning this week
             if (!hasEarningThisWeek) {
-              response = await getOptionChain(this.apiKey, symbol, this.thisFridayStr);
+              response = await getOptionChain(this.apiKey, symbol, this.thisFridayInput);
               chain = response.data.chain;
               this.filterOption(chain);
             }
 
             // Make sure no earning next week
             if (!hasEarningNextWeek) {
-              response = await getOptionChain(this.apiKey, symbol, this.nextFridayStr);
+              response = await getOptionChain(this.apiKey, symbol, this.nextFridayInput);
               chain = response.data.chain;
               this.filterOption(chain);
             }
