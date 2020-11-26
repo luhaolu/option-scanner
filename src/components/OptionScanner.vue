@@ -80,11 +80,12 @@
 import {getOptionChain, getCurrentPrice, getRSI7, getATR7, getEODStockPrice, getEarnings} from "../services/IntrinioService";
 import {BlackScholes} from "../services/BackSchols";
 import {WeeklyOptions} from "../services/WeeklyOptions";
-import EarningsData from '../services/earnings.json'; // earnings up to Feb 17 2021
-// import VueTradingView from 'vue-trading-view';
+import EarningsData from "../services/earnings.json"; // earnings up to Feb 17 2021
+import moment from "moment";
+// import VueTradingView from "vue-trading-view";
 
 export default {
-  name: 'OptionScanner',
+  name: "OptionScanner",
   props: {
     msg: String
   },
@@ -109,49 +110,50 @@ export default {
       EarningsData: EarningsData,
       fields: [
         {
-          key: 'symbol',
+          key: "symbol",
           sortable: true
         },
         {
-          key: 'stock_price',
+          key: "stock_price",
           sortable: true
         },
         {
-          key: 'strike',
+          key: "strike",
           sortable: true
         },
         {
-          key: 'bid',
+          key: "bid",
           sortable: true
         },
         {
-          key: 'ask',
+          key: "ask",
           sortable: true
         },
         {
-          key: 'expiry',
+          key: "expiry",
           sortable: true
         },
         {
-          key: 'drop_%',
+          key: "drop_%",
           sortable: true
         },
         {
-          key: 'DTE',
+          key: "DTE",
           sortable: true
         },
         {
-          key: 'premium/day',
+          key: "premium/day",
           sortable: true
         },
         {
-          key: 'annualized_%',
+          key: "annualized_%",
           sortable: true,
-          sortDirection: 'desc'
+          sortDirection: "desc"
         },
       ],
       thisFridayInput: null,
       nextFridayInput: null,
+      holidays: ["2020-11-26", "2020-12-25", "2021-1-1"]
     }
   },
   created  () {
@@ -160,34 +162,32 @@ export default {
   },
   computed: {
     previousTradingDay() {
-      const date = new Date();
+      const date = moment();
       for (var i = 1; i < 6; i ++) {
-        let dayOfWeek = new Date(date.setDate(date.getDate() - i)).getDay();
-        if (dayOfWeek % 6 !== 0) {
+        let dayOfWeek = date.subtract(1, "days").day();
+        if (dayOfWeek % 6 !== 0 && this.holidays.find(x => x === this.formatDate(date)) === undefined) {
           break;
         }
       }
       return this.formatDate(date);
     },
     today() {
-      return new Date();
+      return moment();
     },
     thisFriday() {
-      return this.getNextDayOfWeek(new Date(), 5);
+      return this.getNextDayOfWeek(moment(), 5);
     },
     thisFridayStr() {
       return this.formatDate(this.thisFriday);
     },
     nextFriday() {
-      const date = this.thisFriday;
-      date.setDate(date.getDate() + 1);
-      return this.getNextDayOfWeek(date , 5);
+      return this.thisFriday.add(7, "days");
     },
     nextFridayStr() {
       return this.formatDate(this.nextFriday);
     },
     symbolsArray() {
-      return this.symbols.split(',');
+      return this.symbols.split(",");
     },
     numOfSearch() {
       return this.scanAll ? this.weeklyOptionsArray.length : this.symbolsArray.length;
@@ -212,40 +212,32 @@ export default {
         return "";
       }
 
-      return Math.round((this.scanEndTime.getTime() - this.scanStartTime.getTime())/(1000 * 60));
+      return this.scanEndTime.diff(this.scanStartTime, "minutes");
     },
   },
   methods: {
     formatDate(date) {
-      var d = new Date(date),
-          month = '' + (d.getMonth() + 1),
-          day = '' + d.getDate(),
-          year = d.getFullYear();
-
-      if (month.length < 2) 
-          month = '0' + month;
-      if (day.length < 2) 
-          day = '0' + day;
-
-      return [year, month, day].join('-');
+      return date.format("YYYY-MM-DD");
     },
     /**
      * params
-     * date [JS Date()]
-     * dayOfWeek [int] 1 (Mon) - 7 (Sun)
+     * date moment from moment js
+     * dayOfWeek 0 (Sun) - 6 (Sat) 
     */
     getNextDayOfWeek(date, dayOfWeek) {
-        // Code to check that date and dayOfWeek are valid left as an exercise ;)
-
-        var ret = new Date(date||new Date());
-        ret.setDate(ret.getDate() + (dayOfWeek - 1 - ret.getDay() + 7) % 7 + 1);
-        return ret;
+        for(var i = 0; i < 9; i++) {
+          date.add(i, "days");
+          if (date.day() === dayOfWeek) {
+            break;
+          } 
+        }
+        return date;
     },
     diffDates(startDate, endDate) {
-      return Math.round((endDate - startDate)/(1000*60*60*24)) + 1;
+      return endDate.diff(startDate, "days")
     },
     dte(expiration) {
-      return this.diffDates(new Date(), Date.parse(expiration));
+      return this.diffDates(moment(), moment(expiration));
     },
     annualized(item) {
       return Math.round(item.price.bid * 365 / ((this.dte(item.option.expiration) + 1) * item.option.strike) * 100);
@@ -261,7 +253,7 @@ export default {
         this.annualized(item) <= 100 &&
         item.price.bid > 0.25 &&
         item.price.bid < item.price.ask && //filter out bad data, as bid should always be lower than ask
-        (this.today.getTime() - Date.parse(item.price.last_timestamp)) / (1000 * 3600 * 24) <= 1); //make sure option is traded in last 24 hr
+        moment(item.price.last_timestamp).diff(moment(), "days") < 1); //make sure option is traded in last 24 hr
 
       // console.log(data);
       chain.forEach((item) => {
@@ -280,7 +272,7 @@ export default {
       })
     },
     async onSearch() {
-      this.scanStartTime = new Date();
+      this.scanStartTime = moment();
       this.numOfSearchDone = 0;
       this.isLoading = true;
       this.options = [];
@@ -292,7 +284,6 @@ export default {
 
           let response = await getCurrentPrice(this.apiKey, symbol)
           this.stock_price = response.data.last_price;
-          // console.log(`${symbol} - ${this.stock_price}`);
 
           response = await getEODStockPrice(this.apiKey, symbol, this.previousTradingDay)
           let dropPercent = (this.stock_price - response.data.historical_data[0].value) / response.data.historical_data[0].value;
@@ -319,8 +310,8 @@ export default {
             let hasEarningNextWeek = false;
             if (nextEarnings) {
               let nextEarningReportDate = nextEarnings.report_date
-              hasEarningThisWeek = this.diffDates(new Date(), Date.parse(nextEarningReportDate)) > 0 && this.diffDates(Date.parse(nextEarningReportDate), this.thisFriday) > 0;
-              hasEarningNextWeek = this.diffDates(new Date(), Date.parse(nextEarningReportDate)) > 0 && this.diffDates(Date.parse(nextEarningReportDate), this.nextFriday) > 0;              
+              hasEarningThisWeek = this.diffDates(moment(), moment(nextEarningReportDate)) > 0 && this.diffDates(moment(nextEarningReportDate), this.thisFriday) > 0;
+              hasEarningNextWeek = this.diffDates(moment(), moment(nextEarningReportDate)) > 0 && this.diffDates(moment(nextEarningReportDate), this.nextFriday) > 0;              
             }
             
             let chain;
@@ -346,7 +337,7 @@ export default {
         }
       }
       this.isLoading = false;
-      this.scanEndTime = new Date();
+      this.scanEndTime = moment();
     },
     async onTest() {
       let res = await getEarnings();
