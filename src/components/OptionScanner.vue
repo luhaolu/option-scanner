@@ -175,13 +175,13 @@ export default {
       return moment();
     },
     thisFriday() {
-      return this.getNextDayOfWeek(moment(), 5);
+      return moment().days(5);
     },
     thisFridayStr() {
       return this.formatDate(this.thisFriday);
     },
     nextFriday() {
-      return this.thisFriday.add(7, "days");
+      return moment().days(12);
     },
     nextFridayStr() {
       return this.formatDate(this.nextFriday);
@@ -218,20 +218,6 @@ export default {
   methods: {
     formatDate(date) {
       return date.format("YYYY-MM-DD");
-    },
-    /**
-     * params
-     * date moment from moment js
-     * dayOfWeek 0 (Sun) - 6 (Sat) 
-    */
-    getNextDayOfWeek(date, dayOfWeek) {
-        for(var i = 0; i < 9; i++) {
-          date.add(i, "days");
-          if (date.day() === dayOfWeek) {
-            break;
-          } 
-        }
-        return date;
     },
     diffDates(startDate, endDate) {
       return endDate.diff(startDate, "days")
