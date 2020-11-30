@@ -296,8 +296,9 @@ export default {
             let hasEarningNextWeek = false;
             if (nextEarnings) {
               let nextEarningReportDate = nextEarnings.report_date
-              hasEarningThisWeek = this.diffDates(moment(), moment(nextEarningReportDate)) > 0 && this.diffDates(moment(nextEarningReportDate), this.thisFriday) > 0;
-              hasEarningNextWeek = this.diffDates(moment(), moment(nextEarningReportDate)) > 0 && this.diffDates(moment(nextEarningReportDate), this.nextFriday) > 0;              
+              // hasEarningThisWeek = this.diffDates(moment(), moment(nextEarningReportDate)) > 0 && this.diffDates(moment(nextEarningReportDate), this.thisFriday) > 0;
+              hasEarningThisWeek = moment(nextEarningReportDate).isBetween(moment(), this.thisFriday); 
+              hasEarningNextWeek = moment(nextEarningReportDate).isBetween(moment(), this.nextFriday);              
             }
             
             let chain;
