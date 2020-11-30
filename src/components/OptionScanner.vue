@@ -223,7 +223,8 @@ export default {
       return endDate.diff(startDate, "days")
     },
     dte(expiration) {
-      return this.diffDates(moment(), moment(expiration));
+      return moment(expiration).diff(moment(), "days") + 1;
+      // return this.diffDates(moment(), moment(expiration));
     },
     annualized(item) {
       return Math.round(item.price.bid * 365 / ((this.dte(item.option.expiration) + 1) * item.option.strike) * 100);
