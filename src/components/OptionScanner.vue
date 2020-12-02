@@ -233,11 +233,12 @@ export default {
       return Math.round(item.price.bid * 100 / (this.dte(item.option.expiration) + 1));
     },
     filterOption(chain) {
+
       chain = chain.filter((item) => item.option.type === "put" &&
         // (this.stock_price - item.option.strike)/this.stock_price >= 0.035 &&
         item.option.strike < this.targetStirke &&
         this.annualized(item) >= 30 &&
-        this.annualized(item) <= 100 &&
+        // this.annualized(item) <= 100 &&
         item.price.bid > 0.25 &&
         item.price.bid < item.price.ask && //filter out bad data, as bid should always be lower than ask
         moment(item.price.last_timestamp).diff(moment(), "days") < 1); //make sure option is traded in last 24 hr
@@ -298,7 +299,7 @@ export default {
             if (nextEarnings) {
               let nextEarningReportDate = nextEarnings.report_date
               // hasEarningThisWeek = this.diffDates(moment(), moment(nextEarningReportDate)) > 0 && this.diffDates(moment(nextEarningReportDate), this.thisFriday) > 0;
-              hasEarningThisWeek = moment(nextEarningReportDate).isBetween(moment(), this.thisFriday); 
+              hasEarningThisWeek = moment(nextEarningReportDate).isBetween(moment(), this.thisFriday) || moment(nextEarningReportDate).isSame((this.formatDate(moment())));
               hasEarningNextWeek = moment(nextEarningReportDate).isBetween(moment(), this.nextFriday);              
             }
             
@@ -308,13 +309,13 @@ export default {
               response = await getOptionChain(this.apiKey, symbol, this.thisFridayInput);
               chain = response.data.chain;
               this.filterOption(chain);
-            }
 
-            // Make sure no earning next week
-            if (!hasEarningNextWeek) {
-              response = await getOptionChain(this.apiKey, symbol, this.nextFridayInput);
-              chain = response.data.chain;
-              this.filterOption(chain);
+              // Make sure no earning next week
+              if (!hasEarningNextWeek) {
+                response = await getOptionChain(this.apiKey, symbol, this.nextFridayInput);
+                chain = response.data.chain;
+                this.filterOption(chain);
+              }
             }
 
           } catch (error) {
