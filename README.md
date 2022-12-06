@@ -1,4 +1,6 @@
 # cboe-scanner
+Using data from CBOE to scan for PUT selling opportunities. This is a quick UI prototype done in Vue. The purpose is to use the prototype to refine the filtering.
+
 
 ## Project setup
 ```
